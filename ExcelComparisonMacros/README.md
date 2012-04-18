@@ -5,8 +5,8 @@ These are three Excel spreadsheets/VBA macros for similar preservation issues re
 
 For reference: 
 
-http://wiki.opf-labs.org/display/SPR/File+management+and+matching+of+tif%2C+htm+and+pdf+files
-http://wiki.opf-labs.org/display/SPR/File+management+and+matching+of+tif%2C+htm+and+pdf+files+solution
+* [SPRUCE Wiki - Issue page](http://wiki.opf-labs.org/display/SPR/File+management+and+matching+of+tif%2C+htm+and+pdf+files)
+* [SPRUCE Wiki - Solution page](http://wiki.opf-labs.org/display/SPR/File+management+and+matching+of+tif%2C+htm+and+pdf+files+solution)
 
 The three included here are:
 
