@@ -12,12 +12,13 @@ import subprocess
 import sys
 import time
 
-TIKA_1_0 = "f:/SCAPE/Repos/tika/tika-app/target/tika-app-1.0-SNAPSHOT.jar"
-TIKA_1_1 = "c:/SPRUCE/Workspace/Identifier/Identifier/tika/tika-app-1.2-SNAPSHOT.jar"
+#TIKA_1_0 = "f:/SCAPE/Repos/tika/tika-app/target/tika-app-1.0-SNAPSHOT.jar"
+TIKA        = "c:/SPRUCE/Workspace/Identifier/Identifier/tika/tika-app-1.2-SNAPSHOT.jar"
+JAVA_FILES  = "c:/SPRUCE/Workspace/Identifier/Identifier/java/"
 
 TIKA_WRAPPER = "TikaWrapper"
 
-tikaPath = TIKA_1_1
+tikaPath = TIKA
 
 def __listFilesInDir(directory):
     """Lists all files (recursively) in the specified directory"""
@@ -51,7 +52,7 @@ def __runTika(file, outfile):
     
     
 def __runTikaIdentOnly(file, outfile):
-    cp = TIKA_1_1+";c:/SPRUCE/Workspace/Identifier/Identifier/java/"
+    cp = TIKA+";"+JAVA_FILES
     #subprocess.call("java -classpath \""+cp+"\" "+TIKA_WRAPPER+" \""+file+"\"", stdout=outfile, shell=True)
     subprocess_flags = 0
     process = subprocess.Popen("java -classpath \""+cp+"\" "+TIKA_WRAPPER+" \""+file+"\"", 
