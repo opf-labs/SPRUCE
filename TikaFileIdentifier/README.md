@@ -52,11 +52,17 @@ It will then run TikaRunner.py over the files contained in the ISO file, outputt
 Each ISO's results are aggregated using CSVFormatter.py into a single CSV file.  
 Once all ISOs have been processed, Summariser.py is used to summarise the data into one summary CSV file.
 
-Note: ISORunner creates two sub directories under the <temp output directory>: /TikaRunner and /Aggregated. TikaRunner.py results files are placed in the first, the aggregated CSVs are placed in the second. Therefore the summary CSV can be placed in the same <temp output directory> without the problem mentioned in the CSVFormatter.py notes below.
+Note: ISORunner creates two sub directories under the <temp output directory>: /TikaRunner and /Aggregated. 
+TikaRunner.py results files are placed in the first, the aggregated CSVs are placed in the second. Therefore 
+the summary CSV can be placed in the same <temp output directory> without the problem mentioned in the CSVFormatter.py 
+notes below.
+
+The following 2 scripts can also be run standalone, in order, on a directory of files.
 
 TikaRunner.py
 -------------
 From the command line, type:
+
   python TikaRunner.py <input file directory> <temp output directory>
   
   e.g.
@@ -67,6 +73,7 @@ This script will run Tika over all files in the input file directory, providing 
 CSVFormatter.py
 ---------------
 From the command line, type:
+
   python CSVFormatter.py <input file directory> <temp output directory> <output csv file>
   
   e.g.
@@ -78,13 +85,18 @@ Note 2: The input file directory enables the filenames listed in the CSV to refl
 Summariser.py
 -------------
 From the command line, type:
+
   python Summariser.py <output csv file>
+  
   or
+  
   python Summariser.py <output csv file> <summarised csv file>
   
   e.g.
   python Summariser.py C:/SPRUCE/Output/results.csv
+  
   or
+  
   python Summariser.py C:/SPRUCE/Output/results.csv C:/SPRUCE/Output/summary.csv
   
 The first approach just outputs summary statistics to the command line.
