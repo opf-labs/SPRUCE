@@ -17,20 +17,24 @@ Windows Installation
    
    Follow default installation
    
-3) Copy scripts and Java files to an appropriate installation directory <INSTALL_DIR>
+3) Install WinCDEmu (only needed if using ISORunner.py)
+
+   Download from http://wincdemu.sysprogs.org/ 
+   
+4) Copy scripts and Java files to an appropriate installation directory <INSTALL_DIR>
    (e.g. C:/SPRUCE/TikaFileIdentifier)
    
-4) If you don't have it, download the Tika JAR file to <INSTALL_DIR>/tika
+5) If you don't have it, download the Tika JAR file to <INSTALL_DIR>/tika
 
    Tika available from: http://tika.apache.org/download.html
 
-5) Compile the Java Tika wrapper.  From command line, type:
+6) Compile the Java Tika wrapper.  From command line, type:
 
     cd <INSTALL_DIR>/java
     javac -cp ../tika/tika-app-1.1.jar TikaWrapper.java
    (Tika jar may be named differently)
    
-6) Update the variables in config.py to suit your installation:
+7) Update the variables in config.py to suit your installation:
      TIKA		 = "<path to your Tika JAR file>"
      IGNORE		 = List of Metadata headings to ignore. Usually cause problems with formatting CSV
      MOUNTER	 = <Path to WinCDEmu batchmnt.exe>
