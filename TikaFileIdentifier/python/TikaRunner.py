@@ -6,19 +6,17 @@ Created on 17 Apr 2012
 @contact: Peter.May@bl.uk
 '''
 
+import config
+
 import os
 import json
 import subprocess
 import sys
 import time
 
-#TIKA_1_0 = "f:/SCAPE/Repos/tika/tika-app/target/tika-app-1.0-SNAPSHOT.jar"
-TIKA        = "c:/SPRUCE/Workspace/Identifier/Identifier/tika/tika-app-1.2-SNAPSHOT.jar"
-JAVA_FILES  = "c:/SPRUCE/Workspace/Identifier/Identifier/java/"
-
 TIKA_WRAPPER = "TikaWrapper"
 
-tikaPath = TIKA
+tikaPath = config.TIKA
 
 def __listFilesInDir(directory):
     """Lists all files (recursively) in the specified directory"""
@@ -52,7 +50,7 @@ def __runTika(file, outfile):
     
     
 def __runTikaIdentOnly(file, outfile):
-    cp = TIKA+";"+JAVA_FILES
+    cp = config.TIKA+";../java/" #+config.JAVA_FILES
     #subprocess.call("java -classpath \""+cp+"\" "+TIKA_WRAPPER+" \""+file+"\"", stdout=outfile, shell=True)
     subprocess_flags = 0
     process = subprocess.Popen("java -classpath \""+cp+"\" "+TIKA_WRAPPER+" \""+file+"\"", 
@@ -67,13 +65,14 @@ def __runTikaIdentOnly(file, outfile):
 
 def processdir(directory, outputdir):
     """Runs Tika over all files listed in the specified directory, outputting results
-       to the specified output directory"""   
+       to the specified output directory"""  
     fileList = __listFilesInDir(directory)
     
-    print "Processing directory", directory
     fileCount = len(fileList)
     fileProc  = 0
     start = time.time()
+    
+    print "[TikaRunner] Processing",fileCount,"files in directory", directory
     
     for file in fileList:
         fname       = os.path.basename(file)
@@ -83,7 +82,7 @@ def processdir(directory, outputdir):
         if not os.path.exists(absOutPath):
             os.makedirs(absOutPath)
             
-        print "Processing", file
+        print "[TikaRunner] Processing", file
         sys.stdout.flush()
         
         outfile = open(os.path.join(absOutPath, fname+".txt"), 'wb')
@@ -94,11 +93,11 @@ def processdir(directory, outputdir):
         fileProc+=1
         avgTime = float(stop-start)/fileProc
         compTime = (avgTime*(fileCount-fileProc))
-        print "Avg Time/File:",avgTime,"s"
+        print "[TikaRunner] Avg Time/File:",avgTime,"s"
         if compTime>60:
-            print "Expected Completion in:",(compTime/60),"minutes"
+            print "[TikaRunner] Expected Completion in:",(compTime/60),"minutes"
         else:
-            print "Expected Completion in:",compTime,"seconds"
+            print "[TikaRunner] Expected Completion in:",compTime,"seconds"
         print ""
 
 if __name__ == '__main__':
