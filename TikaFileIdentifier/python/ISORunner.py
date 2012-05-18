@@ -16,6 +16,13 @@ import subprocess
 import sys
 import time
 
+def raw_string(s):
+    if isinstance(s, str):
+        s = s.encode('string-escape')
+    elif isinstance(s, unicode):
+        s = s.encode('unicode-escape')
+    return s
+
 def __listISOsInDir(directory):
     """Lists all ISO files (recursively) in the specified directory"""
     fileList = []
@@ -34,7 +41,7 @@ def __mountIsoFile(isofile, mountpoint):
         
     print "Mounting",isofile,"to",mountpoint
     subprocess_flags = 0
-    process = subprocess.Popen([config.MOUNTER, isofile, mountpoint, "/wait"], 
+    process = subprocess.Popen([raw_string(config.MOUNTER), isofile, mountpoint, "/wait"], 
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                creationflags=subprocess_flags)
 
@@ -85,6 +92,7 @@ def processDirectory(directory, outputdir, outputfile):
     print "[ISORunner] Processing",fileCount,"ISO files in directory", directory
     # now process each ISO file    
     for file in isoList:
+        file = raw_string(file)
         fname       = os.path.basename(file)
         relpath     = os.path.dirname(os.path.relpath(file, directory))
         absOutPath  = os.path.join(outputdir, "TikaRunner", relpath, fname[:-4])
