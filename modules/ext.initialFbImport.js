@@ -44,9 +44,10 @@ if ($.inArray("fb-user", wgUserGroups) != '-1' && wgEnableWriteAPI) {
 								var accessToken = response.authResponse.accessToken;
 								//make request for user profile information
 								makeFacebookRequest("", accessToken);
-								//what connections do we want tor request?
+								//what connections do we want to request?
 								var fbOptions = fbImportOptions.split(",");
 								for (var i = 0; i < fbOptions.length; i++) {
+									//make request for connection
 									makeFacebookRequest(fbOptions[i], accessToken);
 								}
 								$( "#fb-import-form" ).dialog( "open" );
@@ -62,6 +63,9 @@ if ($.inArray("fb-user", wgUserGroups) != '-1' && wgEnableWriteAPI) {
 //handles jQuery UI form
 $(function() {
 	var buttonsOpts = {}
+	var placeholder = {};
+	placeholder["User Page"] = "This is a User Page. If it's yours, please consider editing it and adding some information. If not, you'll find a link to yours at the top of the page.";
+	var submitted = false;
 	buttonsOpts["Save to your "+wgSiteName+" User Page"] = function() {
 		var output = {};
 		var count = 0;
@@ -74,27 +78,29 @@ $(function() {
 			}
 		});
 		if (count > 0) {
+			submitted = true;
 			updateUserPage(output); //update the user page
-			$( this ).dialog( "close" );
-			displayFeedback("success");
 		}
-		else {
-			$( this ).dialog( "close" );
-			displayFeedback("cancel");
-		}
+		$( this ).dialog( "close" );
 	}
 	buttonsOpts["Cancel"] = function() {
 		$( this ).dialog( "close" );
-				displayFeedback("cancel");
 	}
-   buttons : buttonsOpts;
+  buttons : buttonsOpts;
 	$( "#fb-import-form" ).dialog({
 		autoOpen: false,
 		height: $(window).height(), //expecting long forms
 		width: 600,
 		modal: true,
 		buttons : buttonsOpts,
-		close: function() {}
+		close: function(submitted) {
+			if(!submitted) {
+				updateUserPage(placeholder); //update User Page with placeholder text to avoid annoying users with repeated forms
+				displayFeedback("cancel");
+			} else {
+				displayFeedback("success");
+			}
+		}
 	});
 });
 
@@ -120,10 +126,11 @@ function makeFacebookRequest(field, accessToken) {
 		$.each(response, function(key, val){
 			var selector = "#fb-import-form #";
 			//if empty field supplied, want to update field corresponding to each key, else update supplied field
+			//i.e. multiple fields making up basic request
 			if (field == "") {
 				selector += key;
 			}
-			else {
+			else {//request for specified connection
 				selector += field;
 			}
 			if ($(selector).length > 0) {
@@ -135,6 +142,8 @@ function makeFacebookRequest(field, accessToken) {
 }
 
 //traverses JSON, constructing strings to populate form fields
+//returns string containing one or more lines of form "Name/other info [(http://www.facebook.com/RESOURCE_ID)]"
+//URL only included where id is available
 function parse(key, val) {
 	//Ignoring these fields for now. Should possibly be making use of category - but only for certain kinds of content
 	if (key == "category" || key == "created_time" || key == "next" ) {
@@ -176,6 +185,7 @@ function parse(key, val) {
 }
 
 function updateUserPage(input) {
+	//Get edit token for page
 	$.ajax({
 		type: "GET",
 		url: wgServer + wgScriptPath + "/api.php",
@@ -186,7 +196,9 @@ function updateUserPage(input) {
 			for (var prop in obj) {
 				if (obj.hasOwnProperty(prop)) {
 					wtoken = encodeURIComponent(obj[prop].edittoken);
+					//Got the token! Can now update the page - after checking again that it doesn't exist.
 					if (obj[prop].missing != undefined && obj[prop].touched == undefined) {
+						//Content of each form field is added as a section headed by label
 						$.each(input, function(id, val) {
 							if(val != "") {
 								$.ajax({

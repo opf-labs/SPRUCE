@@ -98,14 +98,17 @@ $wgFbConnectionImportOptions = array(
 
 $dir = dirname( __FILE__ ) . '/';
 
+//Setup the Initial Import functionality
 $wgExtensionFunctions[] = 'init';
 $wgHooks['ResourceLoaderGetConfigVars'][] = 'ConfigFbOptionsForResourceLoader';
 
+//Setup the special page for the image import
 $wgAutoloadClasses['FacebookImport'] = $dir.'FacebookImport.body.php';
 $wgExtensionMessagesFiles['FacebookImport'] = $dir.'FacebookImport.i18n.php';
 $wgExtensionAliasesFiles['FacebookImport'] = $dir.'FacebookImport.aliases.php';
 $wgSpecialPages['FacebookImport'] = 'FacebookImport';
 
+//Include JavaScript and CSS
 $wgResourceModules['ext.facebook.sdk'] = array(
 	'scripts' => 'ext.facebook.sdk.js',
 	'messages' => array(),
@@ -132,12 +135,14 @@ $wgResourceModules['ext.FacebookImport'] = array(
 	'remoteExtPath' => 'FacebookImport/modules'
 );
 
+//Adds Initial Import form to every page. Inelegant - would doing form entirely in JS only when needed be better?
 function init() {
 	global $wgOut;
 	$wgOut->addModules( 'ext.InitialFacebookImport' );
 	$wgOut->addHTML( createForm() );
 }
 
+//Processes additional Facebook request configuration and makes it available to JavaScript as a string.
 function ConfigFbOptionsForResourceLoader( &$vars ) {
 		global $wgFbConnectionImportOptions;
 		$var = "";
@@ -150,6 +155,7 @@ function ConfigFbOptionsForResourceLoader( &$vars ) {
 		return true;
 	}
 
+//Creates Initial Import form
 function createForm() {
 	global $wgFbImportOptions, $wgFbConnectionImportOptions, $wgSitename;
 	$form = "<div id='fb-import-form' title='Fill in your ".$wgSitename." User Page' style='display:none'>";
@@ -164,6 +170,7 @@ function createForm() {
 	return $form;
 }
 
+//Creates Initial Import form rows
 function createFormRows($field_list) {
 	$rows = "";
 	foreach ($field_list as $label=>$field) {
