@@ -29,6 +29,11 @@ $wgExtensionCredits['specialpage'][] = array(
 	'version'        => '0.2',
 );
 
+// Which of the fields returned in a standard query on a user's FB ID are you interested in for the Initial Import form?
+// Note that some require additional permissions for your Facebook app - see https://developers.facebook.com/docs/authentication/permissions/
+// How do you want them to be labelled on the form?
+// Do they need a textfield or textarea?
+// Can also add arbitrary additional feeds here (won't be populated automatically, obviously).
 $wgFbImportOptions = array(
 	"name" => array(true, "Name", "textfield"),
 	"first_name" => array(false, "First Name", "textfield"),
@@ -58,6 +63,11 @@ $wgFbImportOptions = array(
 	"work" => array(true, "Work", "textarea")
 );
 
+// These options require additional, individual queries to be made to FB to be included in the Initial Import form.
+// Note that some require additional permissions for your Facebook app - see https://developers.facebook.com/docs/authentication/permissions/
+// How do you want them to be labelled on the form?
+// Do they need a textfield or textarea?
+// Can also add arbitrary additional feeds here (won't be populated automatically, obviously).
 $wgFbConnectionImportOptions = array(
 	"accounts" => array(true, "Accounts", "textarea"),
 	"activities" => array(false, "Activities", "textarea"),
