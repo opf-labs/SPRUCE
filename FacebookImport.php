@@ -1,4 +1,33 @@
 <?php
+/*
+ * Copyright © 2012 Patrick McCann
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
+if ( !defined( 'MEDIAWIKI' ) ) {
+	die( 'This file is a MediaWiki extension, it is not a valid entry point' );
+}
+
+// Add information about this extension to Special:Version.
+$wgExtensionCredits['specialpage'][] = array(
+	'path'           => __FILE__,
+	'name'           => 'Facebook Import for Mediawiki',
+	'author'         => 'Patrick McCann',
+	'url'            => '',
+	'descriptionmsg' => 'facebookimport-desc',
+	'version'        => '0.2',
+);
 
 $wgFbImportOptions = array(
 	"name" => array(true, "Name", "textfield"),
@@ -72,22 +101,30 @@ $wgResourceModules['ext.facebook.sdk'] = array(
 	'messages' => array(),
 	'dependencies' => array(),
 	'position' => 'bottom',
-	'localBasePath' => $dir.'/modules',
+	'localBasePath' => $dir.'modules',
 	'remoteExtPath' => 'Facebook/modules'
 );
-$wgResourceModules['ext.FacebookImport'] = array(
+$wgResourceModules['ext.InitialFacebookImport'] = array(
 	'scripts' => 'ext.initialFbImport.js',
 	'styles' => 'ext.jQueryUI.css',
 	'messages' => array(),
 	'dependencies' => array( 'ext.facebook.sdk', 'jquery.ui.dialog' ),
 	'position' => 'bottom',
-	'localBasePath' => $dir.'/modules',
+	'localBasePath' => $dir.'modules',
+	'remoteExtPath' => 'FacebookImport/modules'
+);
+$wgResourceModules['ext.FacebookImport'] = array(
+	'scripts' => 'ext.fbImport.js',
+	'messages' => array(),
+	'dependencies' => array( 'ext.facebook.sdk'),
+	'position' => 'bottom',
+	'localBasePath' => dirname( __FILE__ ).'/modules',
 	'remoteExtPath' => 'FacebookImport/modules'
 );
 
 function init() {
 	global $wgOut;
-	$wgOut->addModules( 'ext.FacebookImport' );
+	$wgOut->addModules( 'ext.InitialFacebookImport' );
 	$wgOut->addHTML( createForm() );
 }
 

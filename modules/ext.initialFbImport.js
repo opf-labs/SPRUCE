@@ -1,15 +1,32 @@
-alert("!");
+/*
+ * Copyright © 2012 Patrick McCann
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
+//Only run for Facebook users and when the write API is enabled
 if ($.inArray("fb-user", wgUserGroups) != '-1' && wgEnableWriteAPI) {
+	//Only want to create pages, so need to query the user page to check it exists
 	$.ajax({
 		type: "GET",
-		url: wgServer + wgScriptPath + "/api.php?format=json&action=query&prop=info&intoken=edit&titles=User:"+wgUserName,
+		url: wgServer + wgScriptPath + "/api.php?format=json&action=query&prop=info&titles=User:"+wgUserName,
 		dataType: 'json',
 		success: function(data) {
 			var obj = data.query.pages;
 			for (var prop in obj) {
 				if (obj.hasOwnProperty(prop)) {
-					wtoken = encodeURIComponent(obj[prop].edittoken);
-					//if (obj[prop].missing != undefined && obj[prop].touched == undefined) {
+					//only proceed if the page doesn't exist
+					if (obj[prop].missing != undefined && obj[prop].touched == undefined) {
 						FB.init({
 							appId  : fbAppId,
 							status : true, // check login status
@@ -17,7 +34,7 @@ if ($.inArray("fb-user", wgUserGroups) != '-1' && wgEnableWriteAPI) {
 							xfbml  : true  // parse XFBML
 						});
 						FB.getLoginStatus(function(response) {
-							if (response.status === 'connected') {
+							if (response.status === 'connected') { //this is the only status we're interested in
 								// the user is logged in and has authenticated your
 								// app, and response.authResponse supplies
 								// the user's ID, a valid access token, a signed
@@ -25,24 +42,163 @@ if ($.inArray("fb-user", wgUserGroups) != '-1' && wgEnableWriteAPI) {
 								// and signed request each expire
 								var uid = response.authResponse.userID;
 								var accessToken = response.authResponse.accessToken;
-								FB.api('/me?access_token='+accessToken, function(response) {
-									alert(JSON.stringify(response));
-									//updateUserPage(wtoken, JSON.stringify(response));
-								});
+								//make request for user profile information
+								makeFacebookRequest("", accessToken);
+								//what connections do we want tor request?
+								var fbOptions = fbImportOptions.split(",");
+								for (var i = 0; i < fbOptions.length; i++) {
+									makeFacebookRequest(fbOptions[i], accessToken);
+								}
+								$( "#fb-import-form" ).dialog( "open" );
 							}
 						});
-					//}
+					}
 				}
 			}
 		}
 	});
 }
 
-function updateUserPage(token, user_data) {
+//handles jQuery UI form
+$(function() {
+	var buttonsOpts = {}
+	buttonsOpts["Save to your "+wgSiteName+" User Page"] = function() {
+		var output = {};
+		var count = 0;
+		$("#fb-import-form input, textarea").each(function() {
+			var val = $(this).val();
+			if (val.length > 0) { //don't want to be submitting empty fields
+				var label = $("label[for="+$(this).attr('id')+"]");
+				output[label.text()] = val;
+				count++; //counting the number of non-empty fields. If all empty, submission == cancellation
+			}
+		});
+		if (count > 0) {
+			updateUserPage(output); //update the user page
+			$( this ).dialog( "close" );
+			displayFeedback("success");
+		}
+		else {
+			$( this ).dialog( "close" );
+			displayFeedback("cancel");
+		}
+	}
+	buttonsOpts["Cancel"] = function() {
+		$( this ).dialog( "close" );
+				displayFeedback("cancel");
+	}
+   buttons : buttonsOpts;
+	$( "#fb-import-form" ).dialog({
+		autoOpen: false,
+		height: $(window).height(), //expecting long forms
+		width: 600,
+		modal: true,
+		buttons : buttonsOpts,
+		close: function() {}
+	});
+});
+
+
+//handles dialogs following form submission
+function displayFeedback(div) {
+	$( "#fb-import-"+div ).dialog({
+		modal: true,
+		buttons: {
+			"Go to User Page": function() {
+				$( this ).dialog( "close" );
+				window.location.href = wgServer + wgScriptPath + "/index.php/User:" + wgUserName;
+			},
+			"Stay on this page": function() {
+				$( this ).dialog( "close" );
+			},
+		}
+	});
+}
+
+function makeFacebookRequest(field, accessToken) {
+	FB.api('/me/'+field+'?access_token='+accessToken, function(response) {
+		$.each(response, function(key, val){
+			var selector = "#fb-import-form #";
+			//if empty field supplied, want to update field corresponding to each key, else update supplied field
+			if (field == "") {
+				selector += key;
+			}
+			else {
+				selector += field;
+			}
+			if ($(selector).length > 0) {
+				var curr = $(selector).val();
+				$(selector).val(curr+parse(key, val)); //Concatenate with existing field contents. Needs to be smarter.
+			}
+		});
+	});
+}
+
+//traverses JSON, constructing strings to populate form fields
+function parse(key, val) {
+	//Ignoring these fields for now. Should possibly be making use of category - but only for certain kinds of content
+	if (key == "category" || key == "created_time" || key == "next" ) {
+		return "";
+	}
+	var fb_string_root = "(http://www.facebook.com/";
+	if (key == "id") {
+		return fb_string_root+val+")";
+	}
+	if(typeof val == "object") {
+		var output = "";
+		$.each(val, function(k,v){
+			var add = parse(k,v);
+			if (add.length > 0) {
+				if (add.indexOf(fb_string_root) != 0) {
+					if (output.indexOf(fb_string_root) == 0) {
+						output = add + " " + output; //If ID encountered before other info (name), place other info before FB URL.
+					}
+					else {
+						if (output != "") {
+							output += "\n"; //If appending to text containing FB url, add new line first.
+						}
+						output += add;
+					}
+				}
+				else {
+					if (output != "") {
+						output += " ";
+					}
+					output += add;
+				}
+			}
+		});
+		return output;
+	}
+	else {
+		return val;
+	}
+}
+
+function updateUserPage(input) {
 	$.ajax({
-		type: "POST",
-		url: "http://localhost/wiki/api.php",
-		data: "action=edit&title=User:"+wgUserName+"&createonly=true&section=new&summary=testing&text="+encodeURIComponent(user_data)+"&token="+token,
-		success: function(data) {}
+		type: "GET",
+		url: wgServer + wgScriptPath + "/api.php",
+		data: "format=json&action=query&prop=info&intoken=edit&titles=User:"+wgUserName,
+		dataType: 'json',
+		success: function(data) {
+			var obj = data.query.pages;
+			for (var prop in obj) {
+				if (obj.hasOwnProperty(prop)) {
+					wtoken = encodeURIComponent(obj[prop].edittoken);
+					if (obj[prop].missing != undefined && obj[prop].touched == undefined) {
+						$.each(input, function(id, val) {
+							if(val != "") {
+								$.ajax({
+									type: "POST",
+									url: wgServer + wgScriptPath + "/api.php",
+									data: "action=edit&title=User:"+wgUserName+"&section=new&summary="+encodeURIComponent(id)+"&text="+encodeURIComponent(val.replace(/\n\r?/g,"<br />"))+"&token="+wtoken,
+								});
+							}
+						});
+					}
+				}
+			}
+		}
 	});
 }
