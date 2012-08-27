@@ -93,7 +93,7 @@ $(function() {
 		width: 600,
 		modal: true,
 		buttons : buttonsOpts,
-		close: function(submitted) {
+		close: function() {
 			if(!submitted) {
 				updateUserPage(placeholder); //update User Page with placeholder text to avoid annoying users with repeated forms
 				displayFeedback("cancel");
