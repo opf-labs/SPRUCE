@@ -1,0 +1,2 @@
+Main-Class: org.opf_labs.spruce.DirectoryCharacteriser
+
