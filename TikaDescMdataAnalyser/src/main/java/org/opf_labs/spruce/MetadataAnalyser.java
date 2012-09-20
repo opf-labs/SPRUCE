@@ -93,8 +93,20 @@ public class MetadataAnalyser {
 				Reader reader = TIKA.parse(stream, md);				
 				stream.close();
 				
+				String wordcloud="";
+				if (mediaType.getType().equalsIgnoreCase(MediaType.application(null).getType()) || 
+					mediaType.getType().equalsIgnoreCase(MediaType.text(null).getType())){
+					Cloud cl = new Cloud();
+					
+					String str = readFile(reader);
+					if(str!=null && str.length()>0){
+						cl.absorb(str, 1);	// 1=unigram; 2=bigrams
+						wordcloud=cl.toHTMLem();
+					}
+				}
+				
 				// Add the metadata information into the hashtable
-				metaTable.put(entry.getName(), new FileMetaInformation(mediaType, md));
+				metaTable.put(entry.getName(), new FileMetaInformation(mediaType, md, wordcloud));
 			} catch (EntryNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -353,22 +365,23 @@ public class MetadataAnalyser {
 			tr.appendChild(thumbcloud);
 			if (mtype.getType().equalsIgnoreCase(MediaType.application(null).getType()) || 
 				mtype.getType().equalsIgnoreCase(MediaType.text(null).getType())){
-				Cloud cl = new Cloud();
-				String wordcloud="";
-				
-				try {
-					String str = readFile(fileSys.getEntryStream(filename));
-					cl.absorb(str, 2);	// 1=unigram; 2=bigrams
-					wordcloud=cl.toHTMLem();
-				} catch (EntryNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (DamagedEntryException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+//				Cloud cl = new Cloud();
+//				String wordcloud="";
+//				
+//				try {
+//					String str = readFile(fileSys.getEntryStream(filename));
+//					cl.absorb(str, 2);	// 1=unigram; 2=bigrams
+//					wordcloud=cl.toHTMLem();
+//				} catch (EntryNotFoundException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				} catch (DamagedEntryException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
 				// add wordcloud to output
-				thumbcloud.appendText(wordcloud);
+//				thumbcloud.appendText(wordcloud);
+				thumbcloud.appendText(mdT.get(filename).getWordCloud());
 			} else if (mtype.getType().equalsIgnoreCase(MediaType.image(null).getType())){
 //				IImageMetadata metadata = Sanselan.getMetadata(fileSys.getEntryStream(filename), );
 			}
@@ -424,6 +437,25 @@ public class MetadataAnalyser {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static String readFile(Reader reader){
+		StringBuffer sb = new StringBuffer();
+
+		try {
+			BufferedReader brin = new BufferedReader(reader);
+			String line = "";
+			while ((line=brin.readLine())!=null) {
+				sb.append(line + "\n");
+			}
+			brin.close();
+			return sb.toString();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+//			e.printStackTrace();
 		}
 		return null;
 	}
