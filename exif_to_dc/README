@@ -1,0 +1,20 @@
+EXIF to DC normaliser v1.0-FINAL
+A SPRUSH MASHUP TOOL - SUPPORTING THE DIGITAL PRESERVATION COMMUNITY
+http://wiki.opf-labs.org/display/SPR/Home
+
+Author: Maurice de Rooij, Dutch National Archives, september 2012
+License: APACHE2
+
+Usage:
+       exif_to_dc.php file=FILENAME
+       exif_to_dc.php folder=FOLDERNAME ; (NOTE: recursive!)
+Optionally, specify an XML output file:
+       exif_to_dc.php file=FILENAME|folder=FOLDERNAME xmlout=FILE.xml
+otherwise it will print XML to STDOUT
+
+Background:
+This tool enables you to read EXIF data from an image file using EXIFTOOL 
+and normalise this to Dublin Core compatible XML adding specific metadata 
+contained in an .ini file. The XML output templates can be tailored to one's needs.
+More information:
+http://wiki.opf-labs.org/display/SPR/Maintain+a+list+of+metadata+mappings+outside+of+the+script

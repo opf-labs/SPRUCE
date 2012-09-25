@@ -1,0 +1,15 @@
+<record>
+	<dc:title>[ini_DCRECORDTITLE]</dc:title>
+	<dcterms:isPartOf>[ini_COLLECTIONNAME]</dcterms:isPartOf>
+	<dcterms:isPartOf>[ini_SUBCOLLECTION]</dcterms:isPartOf>
+	<dcterms:issued>[exif_DateCreated]</dcterms:issued>>
+	<dc:description>[exif_Description]</dc:description>
+	<dc:creator>[exif_Creator]</dc:creator>
+	[exif_Subject]
+	<dc:format>[exif_Format]</dc:format>
+	<dc:identifier>[exif_FileName]</dc:identifier>
+	<dc:publisher>[ini_PUBLISHER]</dc:publisher>
+	<dc:rightsholder>[ini_RIGHTSHOLDER]</dc:rightsholder>
+	<dc:rightsLicense>[ini_DUPLICATIONPOLICY]</dc:rightsLicense>
+	[ini_subject_metadata]
+</record>
