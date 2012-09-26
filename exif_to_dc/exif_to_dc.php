@@ -1,16 +1,17 @@
 <?php
 /*
-EXIF to DC normaliser v1.0 FINAL
-A SPRUSH MASHUP TOOL - SUPPORTING THE DIGITAL PRESERVATION COMMUNITY
+EXIF to DC XML normaliser v1.0 FINAL
+A SPRUCE MASHUP TOOL - SUPPORT YOUR DIGITAL PRESERVATION COMMUNITY
 Author: Maurice de Rooij, Dutch National Archives, september 2012
 License: APACHE2
-Info: http://wiki.opf-labs.org/display/SPR/Maintain+a+list+of+metadata+mappings+outside+of+the+script
+Info: http://wiki.opf-labs.org/display/TR/EXIF+to+DC+XML+normaliser
 */
 
 # configure location of exiftool (os independent)
 $exiftool = "C:\\utils\\exiftool\\exiftool.exe";
 # configure location of ini file of default metadata
 $inifile = "./exif_to_dc.ini";
+### BE CAREFUL NOW !!! ###
 # configure location of XML HEADER snippet
 $xml_header = file_get_contents("./xml_templates/header.xml");
 # configure location of RECORD snippet
@@ -34,7 +35,7 @@ parse_str(implode('&', array_slice($argv, 1)), $opts);
 
 # here is where the magic happens
 if(count($opts) == 0) {
-	echo "-= EXIF TO DC normaliser v1.0-FINAL =-";
+	echo "-= EXIF TO DC XML normaliser v1.0-FINAL =-";
 	echo "\n";
 	echo "Usage:";
 	echo "\n";
