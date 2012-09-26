@@ -15,13 +15,7 @@ Optionally, specify an XML output file:
 otherwise it will print XML to STDOUT
 
 Background:
-This OS-independent tool enables you to read EXIF-data from an image file using ExifTool and 
-normalise this to Dublin Core compatible XML adding specific metadata which is contained in an 
-.ini file. The XML output templates can be tailored to one's needs. Tool is able to handle 
-single files, or recurse trough a folder. Output is written to STDOUT, unless an output XML 
-file is specified.
+This OS-independent tool enables you to read EXIF-data from an image file using ExifTool and normalise this to Dublin Core compatible XML adding specific metadata which is contained in an .ini file. The XML output templates can be tailored to one's needs. Tool is able to handle single files, or recurse trough a folder. Output is written to STDOUT, unless an output XML file is specified.
 
-Please note this tool is a prototype and adds very specific institutional metadata from The 
-State University of New York at Binghamton, though the code can be changed very easy to your 
-own needs.
+Please note this tool is a prototype and adds very specific institutional metadata from The State University of New York at Binghamton, though the code can be changed very easy to your own needs.
 
