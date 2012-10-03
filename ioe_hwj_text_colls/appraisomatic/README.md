@@ -18,16 +18,17 @@ from the SPRUCE work with some nasty hacking along the way so plenty of room for
 to put it politely!
 
 ** USAGE **
-This project requires you have Griffon and Groovy installed on your machine. It should then
+
+To build the project you need Griffon and Groovy. It should then
 be possible to check out and run with: 
 
 > griffon run-app
 
-alternatively, I've put the executable jar here:
+Alternatively, I've put the executable jar here:
 
 http://dl.dropbox.com/u/1806257/appraisomatic.jar
 
-Run as usual with:
+where the only requirement is Java and run as usual with:
 
 > java -jar appraisomatic.jar
 
