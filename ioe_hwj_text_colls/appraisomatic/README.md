@@ -31,6 +31,16 @@ Run as usual with:
 
 > java -jar appraisomatic.jar
 
+To keep the GitHub files small, I've removed the library files too. To build this you'll 
+need the three library files that are bundled here:
+
+http://dl.dropbox.com/u/1806257/appraisomatic_lib.zip.jar
+
+These are argo, beam-cloud and the directory characteriser jar built from the code developed
+at the workshop. The dc jar includes Tika.
+
+Told you it was ugly! :-)
+
 Once running you'll get a nice simple window and you basically click each button from the top 
 down:
 
