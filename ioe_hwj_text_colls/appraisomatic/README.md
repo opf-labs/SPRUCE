@@ -1,7 +1,7 @@
 Appraisomatic
 peter.cliff@bl.uk
 
-A GUI that wraps some scripts identifying and describing a otherwise unknown collection
+A GUI that wraps some scripts identifying and describing an otherwise unknown collection
 of predominantly textual documents using Apache Tika to extract metadata and full-text,
 create some word clouds for the documents and the collection as a whole and finally 
 collate some of that metadata into a HTML summary report.
@@ -78,6 +78,7 @@ See:
 https://github.com/openplanets/SPRUCE/tree/master/ioe_hwj_text_colls/find_compare
 
 ** GIANTS **
+
 This work includes a TikaWrapper that configures Tika and provides the nifty 
 output routines for JSON and XML, etc. created by Carl Wilson and Peter May:
 
