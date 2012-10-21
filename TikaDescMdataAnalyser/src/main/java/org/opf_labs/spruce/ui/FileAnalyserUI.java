@@ -3,6 +3,9 @@
  */
 package org.opf_labs.spruce.ui;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.EventListener;
 import java.util.concurrent.Executor;
 
@@ -24,12 +27,17 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 /**
@@ -55,8 +63,12 @@ public class FileAnalyserUI extends Application {
 	TextField ofTextField = null;
 	Text outputText = null;
 	Button btn = null;
+	Button dirButton = null;
+	Button htmlButton = null;
 	
 	private int complete = 0;
+	
+	String configFile = "";
 	
 	ThreadListener listener;
 
@@ -64,7 +76,7 @@ public class FileAnalyserUI extends Application {
 	 * @see javafx.application.Application#start(javafx.stage.Stage)
 	 */
 	@Override
-	public void start(Stage primaryStage) throws Exception {
+	public void start(final Stage primaryStage) throws Exception {
 		// create a new Metadata Analyser
 		analyser = new MetadataAnalyser(CONFIG);	
 	
@@ -87,11 +99,79 @@ public class FileAnalyserUI extends Application {
 		dirTextField = new TextField();
 		grid.add(dirTextField, 1, 1);
 		
+		InputStream is_img = FileAnalyserUI.class.getClassLoader().getResourceAsStream("resources/Folder_Add.png");
+		if (is_img==null){
+			// try loading from file
+			is_img = new FileInputStream("resources/Folder_Add.png");
+		}
+		Image img_folder_add = new Image(is_img);
+		ImageView iv_folder_add = new ImageView(img_folder_add);
+		iv_folder_add.setFitHeight(16);
+		iv_folder_add.setPreserveRatio(true);
+
+		dirButton = new Button();
+		dirButton.setGraphic(iv_folder_add);
+		dirButton.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent arg0) {
+				DirectoryChooser directoryChooser = new DirectoryChooser(); 
+                directoryChooser.setTitle("Select a folder to analyse...");
+				//Show open file dialog
+				File file = directoryChooser.showDialog(primaryStage);
+				if(file!=null){
+					dirTextField.setText(file.getPath());
+				}
+			}
+		});
+		
+		grid.add(dirButton, 2, 1);
+		
 		Label outputFile = new Label("Results Output File:");
 		grid.add(outputFile, 0, 2);
 		
 		ofTextField = new TextField();
 		grid.add(ofTextField, 1, 2);
+		
+		InputStream is_img_file = FileAnalyserUI.class.getClassLoader().getResourceAsStream("resources/File_HTML.png");
+		if (is_img_file==null){
+			// try loading from file
+			is_img_file = new FileInputStream("resources/File_HTML.png");
+		}
+		Image img_file_html = new Image(is_img_file);
+		ImageView iv_file_html = new ImageView(img_file_html);
+		iv_file_html.setFitHeight(16);
+		iv_file_html.setPreserveRatio(true);
+
+		htmlButton = new Button();
+		htmlButton.setGraphic(iv_file_html);
+		htmlButton.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent arg0) {
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle("Save results to (HTML file) ...");
+				
+				//Set extension filter
+				FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("HTML pages", "*.htm", "*.html", "*.xhtml");
+				fileChooser.getExtensionFilters().add(extFilter);
+				
+				//Show save file dialog
+				File file = fileChooser.showSaveDialog(primaryStage);
+				if(file!=null){
+					String path = file.getPath();
+					if(!file.getName().matches(".*\\.[Xx]?[Hh][Tt][Mm][Ll]?")){
+						int index = path.lastIndexOf(".");
+						if (index==-1){
+							index = path.length();
+						}
+						path = path.substring(0, index)+".html";
+					}
+					ofTextField.setText(path);
+				}
+			}
+		});
+		
+		grid.add(htmlButton, 2, 2);
+		
 		
 		btn = new Button(TXT_ANALYSE);
 		HBox hbBtn = new HBox(10);
@@ -101,6 +181,52 @@ public class FileAnalyserUI extends Application {
 		
 		outputText = new Text();
 		grid.add(outputText, 1, 6);
+		
+		final Label configSelect = new Label("Choose new Metadata config file...");
+		configSelect.setTextFill(Color.web("#0076a3"));
+		
+		configSelect.setOnMouseEntered(new EventHandler<MouseEvent>() {
+		    @Override 
+		    public void handle(MouseEvent e) {
+		    	configSelect.setScaleX(1.2);
+		    	configSelect.setScaleY(1.2);
+		    }
+		});
+
+		configSelect.setOnMouseExited(new EventHandler<MouseEvent>() {
+		    @Override 
+		    public void handle(MouseEvent e) {
+		    	configSelect.setScaleX(1);
+		    	configSelect.setScaleY(1);
+		    }
+		});
+		
+		configSelect.setOnMouseClicked(new EventHandler<MouseEvent>(){
+			@Override
+			public void handle(MouseEvent e) {
+				FileChooser fileChooser = new FileChooser();
+				if(!configFile.equals("")){
+					fileChooser.setInitialDirectory(new File(configFile));
+				}
+				fileChooser.setTitle("Select a new Metadata properties file ...");
+				
+				//Set extension filter
+				FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Metadata Properties", "*.properties");
+				fileChooser.getExtensionFilters().add(extFilter);
+				
+				//Show save file dialog
+				File file = fileChooser.showOpenDialog(primaryStage);
+				if(file!=null){
+					configFile = file.getPath();
+					analyser.loadConfiguration(configFile);
+				}
+			}
+		});
+		
+		HBox hbCSel = new HBox(10);
+		hbCSel.setAlignment(Pos.BASELINE_RIGHT);
+		hbCSel.getChildren().add(configSelect);
+		grid.add(hbCSel, 1, 8, 2, 1);
 		
 //		final Text actiontarget = new Text();
 //		grid.add(actiontarget,  1, 6);
@@ -156,6 +282,8 @@ public class FileAnalyserUI extends Application {
 		processing = proc;
 		dirTextField.setDisable(proc);
 		ofTextField.setDisable(proc);
+		dirButton.setDisable(proc);
+		htmlButton.setDisable(proc);
 		if (proc){
 			scenetitle.setText(TXT_PROCESSING);
 			btn.setText(TXT_CANCEL);

@@ -56,10 +56,6 @@ public class MetadataAnalyser {
 	// Default configuration file name
 	private static final String		CONFIG = "resources/config.properties";
 	
-	// Default lists - can be overwritten with a config.properties file
-//	private static final Set<String> IMAGE_DESC_MDATA_KEYS = new HashSet<String>(Arrays.asList("Artist", "Author", "Copyright", "creator", "dc:creator", "dc:description", "dc:subject", "dc:title", "description", "Image Description", "Keywords", "meta:author", "meta:keyword", "subject", "title"));
-//	private static final Set<String> TEXT_DESC_MDATA_KEYS = new HashSet<String>(Arrays.asList("Author", "creator", "dc:creator", "dc:title", "meta:author", "meta:last-author", "title"));
-	
 	// Once configuration loaded, this will be the actual set of descriptive metadata keys
 	private HashMap<String, Set<String>> KEYLIST = new HashMap<String, Set<String>>();
 	
@@ -121,7 +117,6 @@ public class MetadataAnalyser {
 		// load descriptive metadata keys
 		loadConfiguration(configFile);
 	}
-	
 	
 	private boolean stop = false;
 	/**
@@ -225,13 +220,11 @@ public class MetadataAnalyser {
 	 * keys.
 	 * @param propFile	File name of the configuration properties file
 	 */
-	private void loadConfiguration(String propFile){
-		// load default lists first, then override if necessary
-//		KEYLIST.put(MediaType.image(null).getType(), IMAGE_DESC_MDATA_KEYS);
-//		KEYLIST.put(MediaType.application(null).getType(), TEXT_DESC_MDATA_KEYS);
-//		KEYLIST.put(MediaType.text(null).getType(), TEXT_DESC_MDATA_KEYS);
+	public void loadConfiguration(String propFile){
+		// clear any current keylist
+		KEYLIST.clear();
 		
-		// now override any specific mimetypes
+		// load configuration from propFile
 		Properties configFile = new Properties();
 		try {
 			InputStream cfStream = MetadataAnalyser.class.getClassLoader().getResourceAsStream(propFile);
@@ -241,7 +234,6 @@ public class MetadataAnalyser {
 			}
 				
 			configFile.load(cfStream);
-			
 			
 			for(String key: configFile.stringPropertyNames()){
 				loadDescriptiveMetadataFile(key, configFile.getProperty(key));
