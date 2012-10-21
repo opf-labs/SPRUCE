@@ -1,14 +1,24 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.opf-labs.spruce</groupId>
-  <artifactId>metadata-analyser</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.opf-labs.spruce</groupId>
+	<artifactId>metadata-analyser</artifactId>
+	<version>0.0.1</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jdk.source.version>1.6</jdk.source.version>
-		<jdk.target.version>1.6</jdk.target.version>
+		<jdk.source.version>1.7</jdk.source.version>
+		<jdk.target.version>1.7</jdk.target.version>
 		<tika.version>1.2</tika.version>
+        <javafx.lib.ant-javafx.jar>${fx.home}/lib/ant-javafx.jar</javafx.lib.ant-javafx.jar>
+        <application.dist>${project.build.directory}</application.dist>
 	</properties>
+	<repositories>
+		<!-- In Project repository -->
+		<repository>
+			<id>in-project</id>
+			<name>In Project Repo</name>
+			<url>file://${project.basedir}/libs</url>
+		</repository>
+	</repositories>
   	<build>
 		<plugins>
 			<plugin>
@@ -28,13 +38,173 @@
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-assembly-plugin</artifactId>
-					<version>2.2.1</version>
-				</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2.1</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.3</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>install</phase>
+						<configuration>
+							<includeScope>runtime</includeScope>
+							<overwritereleases>false</overwritereleases>
+							<overwritesnapshots>false</overwritesnapshots>
+							<overwriteifnewer>true</overwriteifnewer>
+						</configuration>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>install</phase>
+						<configuration>
+							<outputDirectory>${application.dist}/resources</outputDirectory>
+							<resources>
+								<resource>
+									<directory>resources</directory>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<configuration>
+							<target  xmlns:fx="javafx:com.sun.javafx.tools.ant">
+								<property name="applet.width" value="800"/>
+			                    <property name="applet.height" value="600"/>
+			                    <property name="application.title" value="Metadata Analyser"/>
+			                    <property name="application.vendor" value="BL"/>
+			                    <property name="application.file" value="${project.build.finalName}"/>
+			                    
+								<manifestclasspath property="manifest.classpath"
+			                                       jarfile="${application.dist}/${application.file}">
+			                        <classpath>
+			                            <path id="build.classpath">
+			                                <fileset dir="${application.dist}/dependency">
+			                                    <include name="*.jar"/>
+			                                </fileset>
+			                            </path>
+			                        </classpath>
+			                    </manifestclasspath>
+							
+								<taskdef resource="com/sun/javafx/tools/ant/antlib.xml"
+		                             uri="javafx:com.sun.javafx.tools.ant"
+		                             classpath="${javafx.lib.ant-javafx.jar}"/>
+			                    <fx:application id="myApp"
+			                                    name="${project.name}"
+			                                    mainClass="org.opf_labs.spruce.ui.FileAnalyserUI"/>
+			                    <fx:jar destfile="${application.dist}/${application.file}">
+			                        <fx:application refid="myApp"/>
+			 
+			                        <manifest>
+			                            <attribute name="Class-Path" value="${manifest.classpath}"/>
+			                        </manifest>
+			 
+			                        <!-- The target/classes folder which contains all resources and class files -->
+			                        <fileset dir="${project.build.outputDirectory}"/>
+			                    </fx:jar>
+			                    
+			                    <fx:resources id="appRes">
+			                        <fx:fileset dir="${application.dist}" includes="*.jar"/>
+			                        <fx:fileset dir="${application.dist}" includes="dependency/*.jar"/>
+			                        <fx:fileset dir="${application.dist}" includes="resources/**" />
+			                    </fx:resources>
+			                    
+			                    <fx:deploy width="${applet.width}" height="${applet.height}"
+			                               outdir="${application.dist}/deploy" nativeBundles="all" embedJNLP="true"
+			                               outfile="${application.file}">
+			 
+			                        <fx:application refId="myApp"/>
+			                        <fx:resources refid="appRes"/>
+			                        
+			                        <fx:info title="${application.title}"
+			                                 vendor="${application.vendor}"/>
+			 
+			                        <!-- Request elevated permissions -->
+			                        <fx:permissions elevated="true"/>
+			                    </fx:deploy>
+							
+<!-- 								<taskdef name="jfxdeploy" classname="com.sun.javafx.tools.ant.DeployFXTask" classpathref="maven.plugin.classpath" /> -->
+<!-- 								<taskdef name="jfxsignjar" classname="com.sun.javafx.tools.ant.FXSignJarTask" classpathref="maven.plugin.classpath" /> -->
+<!-- 								<jfxdeploy width="800" height="600" nativeBundles="all" outdir="${project.build.directory}/deploy" outfile="${project.build.finalName}"> -->
+<!-- 									<info title="${project.name}" /> -->
+<!-- 									<application name="${project.name}" mainClass="org.opf_labs.spruce.ui.FileAnalyserUI"/> -->
+<!-- 									<resources> -->
+<!-- 										<fileset dir="${project.build.directory}" includes="*.jar"/> -->
+<!-- 										<fileset dir="${project.build.directory}/dependency" includes="*.jar"/> -->
+<!-- 									</resources> -->
+<!-- 								</jfxdeploy> -->
+<!-- 								<jfxsignjar destdir="${project.build.directory}/deploy" -->
+<!--                                             keyStore="${project.basedir}/src/main/java/jnlp/keystore.jks" -->
+<!--                                             storePass="metadataanalyser" -->
+<!--                                             alias="signFiles" -->
+<!--                                             keyPass="metadataanalyser"> -->
+<!--                                     <fileset dir="${project.build.directory}/deploy" includes="*.jar"/> -->
+<!--                                 </jfxsignjar> -->
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
-	</build>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-dependency-plugin</artifactId>
+										<versionRange>[2.1,)</versionRange>
+										<goals>
+											<goal>copy-dependencies</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+  	</build>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -68,15 +238,43 @@
 			<version>1.6</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.sanselan</groupId>
-			<artifactId>sanselan</artifactId>
-			<version>0.97-incubator</version>
+			<groupId>commons-cli</groupId>
+			<artifactId>commons-cli</artifactId>
+			<version>1.2</version>
 		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.sanselan</groupId> -->
+<!-- 			<artifactId>sanselan</artifactId> -->
+<!-- 			<version>0.97-incubator</version> -->
+<!-- 		</dependency> -->
             
 	    <dependency>
 	      <groupId>com.google.code.gson</groupId>
 	      <artifactId>gson</artifactId>
 	      <version>2.2.2</version>
 	    </dependency>
+	    
+	    <dependency>
+	        <groupId>com.oracle</groupId>
+	        <artifactId>javafx</artifactId>
+	        <version>2.2</version>
+	        <scope>system</scope>
+	        <systemPath>${fx.home}/jre/lib/jfxrt.jar</systemPath>
+	    </dependency>
+	    
+	    <dependency>
+			<groupId>hp</groupId>
+			<artifactId>gagawa</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>bodleian</groupId>
+			<artifactId>wordcloud</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+	    
 	</dependencies>
+	<organization>
+		<name>BL</name>
+	</organization>
 </project>

@@ -1,0 +1,7 @@
+Author
+creator
+dc:creator
+dc:title
+meta:author
+meta:last-author
+title

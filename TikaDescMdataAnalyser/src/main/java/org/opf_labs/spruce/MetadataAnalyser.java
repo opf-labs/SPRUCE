@@ -4,31 +4,27 @@
 package org.opf_labs.spruce;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.sanselan.Sanselan;
-import org.apache.sanselan.common.IImageMetadata;
+import org.apache.commons.cli.*;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
-import org.opf_labs.spruce.bytestreams.ByteStreamId;
-import org.opf_labs.spruce.bytestreams.ByteStreams;
 import org.opf_labs.spruce.filesystems.FileSystem.DamagedEntryException;
 import org.opf_labs.spruce.filesystems.FileSystem.EntryNotFoundException;
 import org.opf_labs.spruce.filesystems.FileSystemEntry;
@@ -45,26 +41,105 @@ import com.hp.gagawa.java.elements.Html;
 import com.hp.gagawa.java.elements.Style;
 import com.hp.gagawa.java.elements.Table;
 import com.hp.gagawa.java.elements.Td;
-import com.hp.gagawa.java.elements.Text;
 import com.hp.gagawa.java.elements.Th;
 import com.hp.gagawa.java.elements.Title;
 import com.hp.gagawa.java.elements.Tr;
 
 /**
- * @author carl
- *
+ * @author Peter May
  */
 public class MetadataAnalyser {
+	// Command line options
+	private static Options options = null;
+	private static final String		OPTION_CONFIG_FILE = "configfile";
 	
-	private static JavaIOFileSystem fileSys;
+	// Default configuration file name
+	private static final String		CONFIG = "resources/config.properties";
+	
+	// Default lists - can be overwritten with a config.properties file
+//	private static final Set<String> IMAGE_DESC_MDATA_KEYS = new HashSet<String>(Arrays.asList("Artist", "Author", "Copyright", "creator", "dc:creator", "dc:description", "dc:subject", "dc:title", "description", "Image Description", "Keywords", "meta:author", "meta:keyword", "subject", "title"));
+//	private static final Set<String> TEXT_DESC_MDATA_KEYS = new HashSet<String>(Arrays.asList("Author", "creator", "dc:creator", "dc:title", "meta:author", "meta:last-author", "title"));
+	
+	// Once configuration loaded, this will be the actual set of descriptive metadata keys
+	private HashMap<String, Set<String>> KEYLIST = new HashMap<String, Set<String>>();
+	
+	// FileSystem and TikaWrapper object variables
+	private JavaIOFileSystem 	fileSys = null;
+	private TikaWrapper 		TIKA 	= null;
+	
+	static {
+		@SuppressWarnings("static-access")
+		Option configfile   = OptionBuilder.withArgName( "file" )
+								.hasArg()
+								.withDescription(  "use given config file for descriptive metadata lists" )
+								.create( OPTION_CONFIG_FILE );
+		
+		options = new Options();
+		options.addOption( configfile );
+	}
 
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
-		TikaWrapper TIKA = TikaWrapper.getTika();
-		// TODO Auto-generated method stub
-		String rootPath = args[0];
+	public static void main(String[] args) {		
+		// process command line arguments - need at least 2 (directory to parse & output file)
+		CommandLine cmd = null;
+	    CommandLineParser parser = new GnuParser();
+	    try {
+	        // parse the command line arguments
+	        cmd = parser.parse( options, args );
+	    }
+	    catch( ParseException exp ) {
+	        System.err.println( "Parsing failed.  Reason: " + exp.getMessage() );
+	    }
+	    
+	    // get the configuration file to use
+	    String config_file = cmd.getOptionValue(OPTION_CONFIG_FILE, CONFIG);
+
+	    // check remaining arguments and analyse
+	    if(cmd.getArgs().length==2){
+	    	MetadataAnalyser analyser = new MetadataAnalyser(config_file);
+	    	analyser.analyse(cmd.getArgs()[0], cmd.getArgs()[1], null);
+	    } else {
+	    	HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("java MetadataAnalyser [options] <input directory> <output file>", options);
+			System.exit(1);
+	    }
+	}
+	
+
+	
+	/**
+	 * Public constructor to create a new Metadata Analyser
+	 * @param configFile	the configuration file listing descriptive metadata files
+	 * 
+	 */
+	public MetadataAnalyser(String configFile){
+		// get a reference to the TikaWrapper
+		TIKA = TikaWrapper.getTika();
+
+		// load descriptive metadata keys
+		loadConfiguration(configFile);
+	}
+	
+	
+	private boolean stop = false;
+	/**
+	 * Terminates the program execution
+	 */
+	public void terminate(){
+		stop = true;
+	}
+	
+	/**
+	 * Use this MetadataAnalyser to analyse the specified input directory, writing results to
+	 * the specified output HTML file. 
+	 * @param inputDir		the input directory to analyse
+	 * @param outputFile	HTML output file to write results to
+	 */
+	public void analyse(String inputDir, String outputFile, ThreadListener listener){
+		stop = false;
+		String rootPath = inputDir;
 		File rootDir = new File(rootPath);
 		fileSys = FileSystems.fromDirectory(rootDir);
 		
@@ -87,11 +162,15 @@ public class MetadataAnalyser {
 				MediaType mediaType = TIKA.getMediaType(stream);
 				stream.close();
 				
+//				System.out.println("Mediatype: "+mediaType.toString());
+				
 				// File Format Parsing
 				stream = fileSys.getEntryStream(entry.getName());
 				Metadata md = new Metadata();
 				Reader reader = TIKA.parse(stream, md);				
 				stream.close();
+				
+//				System.out.println("Metadata: "+md.toString());
 				
 				String wordcloud="";
 				if (mediaType.getType().equalsIgnoreCase(MediaType.application(null).getType()) || 
@@ -108,16 +187,12 @@ public class MetadataAnalyser {
 				// Add the metadata information into the hashtable
 				metaTable.put(entry.getName(), new FileMetaInformation(mediaType, md, wordcloud));
 			} catch (EntryNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (DamagedEntryException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (TikaException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -126,15 +201,93 @@ public class MetadataAnalyser {
 			if(done>=(pcComplete+10)){
 				pcComplete+=10;
 				System.out.println("Processed "+pcComplete+"%");
+				// update the UI if there is one
+				if(listener!=null){
+					listener.notifyUpdate();
+				}
+			}
+			
+			// if asked to stop, stop immediately
+			if (stop){
+				return;
 			}
 		}
 		
-		generateHTML(args[1], metaTable);
+//		System.out.println("metaTable: "+metaTable.size());
+		
+		generateHTML(outputFile, metaTable);
 	}
 	
 	
-	private static String[] IMAGE_DESC_MDATA_KEYS = {"Artist", "Author", "Copyright", "creator", "dc:creator", "dc:description", "dc:subject", "dc:title", "description", "Image Description", "Keywords", "meta:author", "meta:keyword", "subject", "title"};
-	private static String[] TEXT_DESC_MDATA_KEYS = {"Author", "creator", "dc:creator", "dc:title", "meta:author", "meta:last-author", "title"};
+	
+	/**
+	 * Loads the configuration file to build up the necessary list of descriptive metadata
+	 * keys.
+	 * @param propFile	File name of the configuration properties file
+	 */
+	private void loadConfiguration(String propFile){
+		// load default lists first, then override if necessary
+//		KEYLIST.put(MediaType.image(null).getType(), IMAGE_DESC_MDATA_KEYS);
+//		KEYLIST.put(MediaType.application(null).getType(), TEXT_DESC_MDATA_KEYS);
+//		KEYLIST.put(MediaType.text(null).getType(), TEXT_DESC_MDATA_KEYS);
+		
+		// now override any specific mimetypes
+		Properties configFile = new Properties();
+		try {
+			InputStream cfStream = MetadataAnalyser.class.getClassLoader().getResourceAsStream(propFile);
+			if (cfStream==null){
+				// try loading from file
+				cfStream = new FileInputStream(propFile);
+			}
+				
+			configFile.load(cfStream);
+			
+			
+			for(String key: configFile.stringPropertyNames()){
+				loadDescriptiveMetadataFile(key, configFile.getProperty(key));
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Loads the specified Descriptive metadata file.
+	 * If filename is null, then use the default based on the mimetype
+	 * @param filename
+	 */
+	private void loadDescriptiveMetadataFile(String mimetype, String filename){
+		if(filename!=null){
+			// read each line of the relevant
+			System.out.print("Loading Descriptive Metadata Tags for: "+mimetype);
+			System.out.flush();
+			
+			Set<String> mdata_keys = new HashSet<String>();
+			try {
+				InputStream dmStream = MetadataAnalyser.class.getClassLoader().getResourceAsStream(filename);
+				if (dmStream==null){
+					// can't find, so try assuming a full file path
+					dmStream = new FileInputStream(filename);
+				}
+				
+				BufferedReader brin = new BufferedReader(
+						new InputStreamReader(dmStream));
+			
+				String br = "";
+				while (brin.ready()) {
+					br = brin.readLine();
+					System.out.print(".");
+					System.out.flush();
+					mdata_keys.add(br);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			KEYLIST.put(mimetype, mdata_keys);
+			System.out.println("Done");
+		}
+	}
+	
 	
 	/**
 	 * Returns an ArrayList of Descriptive Metadata keys for the file if they exist
@@ -142,19 +295,15 @@ public class MetadataAnalyser {
 	 * @param md
 	 * @return
 	 */
-	public static ArrayList<String> getDescriptiveMetadataKeys(MediaType mtype, Metadata md){
+	private ArrayList<String> getDescriptiveMetadataKeys(MediaType mtype, Metadata md){
 		ArrayList<String> mdata = new ArrayList<String>();
+		// get the full descriptive metadata key list for this MediaType
+		Set<String> keys = KEYLIST.get(mtype.getType());
 		
-		String[] keys = null;
-		if(mtype.getType().equalsIgnoreCase(MediaType.image(null).getType())){
-			keys = IMAGE_DESC_MDATA_KEYS;
-		} else if(mtype.getType().equalsIgnoreCase(MediaType.application(null).getType()) || 
-				  mtype.getType().equalsIgnoreCase(MediaType.text(null).getType())){
-			keys = TEXT_DESC_MDATA_KEYS;
-		}
-		
+		// check which of the descriptive metadata keys have values in this file's metadata
 		if(keys!=null){
 			for (String s: keys){
+//				System.out.println("Key: "+s+"\tvalue: "+md.get(s));
 				if(md.get(s)!=null){
 					mdata.add(s);
 				}
@@ -180,7 +329,7 @@ public class MetadataAnalyser {
 			".orange {background-color:#ffac62;}";	// orange
 	
 	
-	public static void generateHTML(String outFile, TreeMap<String, FileMetaInformation> mdT){
+	public void generateHTML(String outFile, TreeMap<String, FileMetaInformation> mdT){
 		Html html = new Html();
 		Head head = new Head();
 		
@@ -284,10 +433,10 @@ public class MetadataAnalyser {
 		int okCount = 0;
 		int badCount = 0;
 
-		Set<String> imgdescset = new HashSet<String>();
-		for(String s: IMAGE_DESC_MDATA_KEYS){
-			imgdescset.add(s);
-		}
+//		Set<String> imgdescset = new HashSet<String>();
+//		for(String s: IMAGE_DESC_MDATA_KEYS){
+//			imgdescset.add(s);
+//		}
 		
 		TreeMap<String, Integer> filemapCount = new TreeMap<String, Integer>();
 		
@@ -297,6 +446,9 @@ public class MetadataAnalyser {
 			// get the metainformation
 			MediaType mtype = mdT.get(filename).getMediaType();
 			Metadata mdata = mdT.get(filename).getMetadata();
+			
+//			System.out.println("mtype: "+mtype.toString());
+//			System.out.println("mdata: "+mdata.toString());
 			
 			// add to file mimetype count
 			if(filemapCount.containsKey(mtype.toString())){
@@ -323,6 +475,7 @@ public class MetadataAnalyser {
 			tr.appendChild(descmdatacell);
 			descmdatacell.appendText("");
 			ArrayList<String> descmdata = getDescriptiveMetadataKeys(mtype, mdata);
+//			System.out.println("DescMdata size: "+descmdata.size());
 			if (descmdata.size()>0){
 				StringBuffer buf = new StringBuffer("");
 				for (String key: descmdata){
@@ -331,7 +484,7 @@ public class MetadataAnalyser {
 				descmdatacell.appendText(buf.toString());
 				
 				// set green/orange row colour
-				if (descmdata.size()==IMAGE_DESC_MDATA_KEYS.length){
+				if (descmdata.size()==KEYLIST.get(mtype.getType()).size()){
 					// green
 					tr.setCSSClass("green");
 					goodCount++;
@@ -340,12 +493,14 @@ public class MetadataAnalyser {
 					okCount++;
 					
 					// calculate missing keys
-					Set<String> tkeys = new HashSet(imgdescset);
+					Set<String> tkeys = new HashSet<String>(KEYLIST.get(mtype.getType()));//new HashSet(imgdescset);
 					Set<String> keys = new HashSet<String>(descmdata);
 					tkeys.removeAll(keys);
 					StringBuffer buf2 = new StringBuffer("Missing metadata: &#013;");
-					for (String k: tkeys){
-						buf2.append(k+" &#013;");
+					if(tkeys!=null){
+						for (String k: tkeys){
+							buf2.append(k+" &#013;");
+						}
 					}
 					descmdatacell.setTitle(buf2.toString());
 				}
@@ -354,8 +509,11 @@ public class MetadataAnalyser {
 				badCount++;
 				
 				StringBuffer buf2 = new StringBuffer("Missing metadata: &#013;");
-				for (String k: IMAGE_DESC_MDATA_KEYS){
-					buf2.append(k+" &#013;");
+				Set<String> keys = KEYLIST.get(mtype.getType());
+				if (keys!=null){
+					for (String k: keys){ //IMAGE_DESC_MDATA_KEYS){
+						buf2.append(k+" &#013;");
+					}
 				}
 				descmdatacell.setTitle(buf2.toString());
 			}
@@ -365,22 +523,7 @@ public class MetadataAnalyser {
 			tr.appendChild(thumbcloud);
 			if (mtype.getType().equalsIgnoreCase(MediaType.application(null).getType()) || 
 				mtype.getType().equalsIgnoreCase(MediaType.text(null).getType())){
-//				Cloud cl = new Cloud();
-//				String wordcloud="";
-//				
-//				try {
-//					String str = readFile(fileSys.getEntryStream(filename));
-//					cl.absorb(str, 2);	// 1=unigram; 2=bigrams
-//					wordcloud=cl.toHTMLem();
-//				} catch (EntryNotFoundException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				} catch (DamagedEntryException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
 				// add wordcloud to output
-//				thumbcloud.appendText(wordcloud);
 				thumbcloud.appendText(mdT.get(filename).getWordCloud());
 			} else if (mtype.getType().equalsIgnoreCase(MediaType.image(null).getType())){
 //				IImageMetadata metadata = Sanselan.getMetadata(fileSys.getEntryStream(filename), );
@@ -421,27 +564,9 @@ public class MetadataAnalyser {
 			e.printStackTrace();
 		}
 	}
-	
-	public static String readFile(InputStream inputStream){
-		StringBuffer sb = new StringBuffer();
 
-		try {
-			BufferedReader brin = new BufferedReader(
-					new InputStreamReader(inputStream));
-			while (brin.ready()) {
-				sb.append(brin.readLine() + "\n");
-			}
-			brin.close();
-			return sb.toString();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
 	
-	public static String readFile(Reader reader){
+	private static String readFile(Reader reader){
 		StringBuffer sb = new StringBuffer();
 
 		try {
@@ -456,16 +581,6 @@ public class MetadataAnalyser {
 			e.printStackTrace();
 		} catch (IOException e) {
 //			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	public static String readFile(String fn) {
-		try {
-			return readFile(new FileInputStream(new File(fn)));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		return null;
 	}

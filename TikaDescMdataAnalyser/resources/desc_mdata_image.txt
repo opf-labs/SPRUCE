@@ -1,0 +1,15 @@
+Artist
+Author
+Copyright
+creator
+dc:creator
+dc:description
+dc:subject
+dc:title
+description
+Image Description
+Keywords
+meta:author
+meta:keyword
+subject
+title
