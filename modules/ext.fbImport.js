@@ -32,23 +32,29 @@ FB.getLoginStatus(function(response) {
 		var uid = response.authResponse.userID;
 		var accessToken = response.authResponse.accessToken;
 		//make request for resource
-		makeFacebookRequest(getURLParameter("fbid"), accessToken);
+		makeFacebookRequest(getURLParameter(location.search, "fbid"), accessToken);
 	}
 });
 
-function getURLParameter(name){return decodeURIComponent((new RegExp('[?|&]'+name+'='+'([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g,'%20'))||null;}
+$("#import-form").submit(function(){
+	var url = $("#fbid").val();
+	$("#fbid").val(getURLParameter(url,"fbid"));
+});
+
+function getURLParameter(url, name){return decodeURIComponent((new RegExp('[?|&]'+name+'='+'([^&;]+?)(&|#|;|$)').exec(url)||[,""])[1].replace(/\+/g,'%20'))||null;}
 
 //Struggling to get Facebook permissions to propagate - this needs further work
 function makeFacebookRequest(id, accessToken) {
 	FB.api(id+'?access_token='+accessToken, function(response) {
-		alert(response);
 		if (response) {
-			uploadFileFromURL(response.source, "FB_photo");
+			uploadFileFromURL(id, response.from.name, response.images[0].source);
 		}
 	});
 }
 
-function uploadFileFromURL(url,filename) {
+function uploadFileFromURL(id, name, url) {
+	filename = encodeURIComponent(url.substring(url.lastIndexOf('/')+1));
+	enc_url = encodeURIComponent(url);
  	$.ajax({
  		type: "GET",
  		url: wgServer + wgScriptPath + "/api.php",
@@ -59,16 +65,16 @@ function uploadFileFromURL(url,filename) {
  			for (var prop in obj) {
  				if (obj.hasOwnProperty(prop)) {
  					var wtoken = encodeURIComponent(obj[prop].edittoken);
- 					//if (obj[prop].missing != undefined && obj[prop].touched == undefined) {
+ 					if (obj[prop].missing != undefined && obj[prop].touched == undefined) {
  						$.ajax({
  							type: "POST",
  							url: wgServer + wgScriptPath + "/api.php",
- 							data: "action=upload&filename="+encodeURIComponent(filename)+"&url="+encodeURIComponent(url)+"&token="+wtoken,
+ 							data: "action=upload&url="+url+"&filename="+filename+"&token="+wtoken+"&comment="+encodeURIComponent("Imported from Facebook. View on Facebook at http://facebook.com/"+id+". Uploaded to Facebook by "+name),
  							success: function(data){
- 								alert(data);
+ 								window.location.replace(wgServer + wgScriptPath + "/index.php/File:" + filename);
  							}
  						});
- 					//}
+ 					}
  				}
  			}
  		}
