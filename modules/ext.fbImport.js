@@ -13,7 +13,12 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
+$("#import-form").submit(function(){
+	var url = $("#fburl").val();
+	$("#fbid").val(getURLParameter(url,"fbid"));
+});
+
 //What are we looking at?
 FB.init({
 	appId  : fbAppId,
@@ -32,29 +37,36 @@ FB.getLoginStatus(function(response) {
 		var uid = response.authResponse.userID;
 		var accessToken = response.authResponse.accessToken;
 		//make request for resource
-		makeFacebookRequest(getURLParameter(location.search, "fbid"), accessToken);
+		var fbid = getURLParameter(location.search, "fbid")
+		if (fbid) {
+			makeFacebookRequest(fbid, accessToken);
+		}
+		else if (getURLParameter(location.search, "submitted")) {
+			alert("Something went wrong. Was that a valid Facebook ID or URL?");
+		}
 	}
-});
-
-$("#import-form").submit(function(){
-	var url = $("#fbid").val();
-	$("#fbid").val(getURLParameter(url,"fbid"));
 });
 
 function getURLParameter(url, name){return decodeURIComponent((new RegExp('[?|&]'+name+'='+'([^&;]+?)(&|#|;|$)').exec(url)||[,""])[1].replace(/\+/g,'%20'))||null;}
 
 //Struggling to get Facebook permissions to propagate - this needs further work
 function makeFacebookRequest(id, accessToken) {
-	FB.api(id+'?access_token='+accessToken, function(response) {
+	FB.api(id+'?access_token='+accessToken, function(response) {;
 		if (response) {
-			alert(response.source);
-			uploadFileFromURL(id, response.from.name, response.images[0].source);
+			if (response.error) {
+				alert("Facebook returned an error message. Are you sure that was a photo, and that you have permission to import it?");
+			}
+			if (response.images[0].source) {
+				uploadFileFromURL(id, response.from.name, response.images[0].source);
+			}
+		}
+		else {
+			alert("Something went wrong. Was that a valid Facebook ID or URL?");
 		}
 	});
 }
 
 function uploadFileFromURL(id, name, url) {
-	alert(url);
 	filename = encodeURIComponent(url.substring(url.lastIndexOf('/')+1));
 	enc_url = encodeURIComponent(url);
  	$.ajax({
@@ -73,8 +85,10 @@ function uploadFileFromURL(id, name, url) {
  							url: wgServer + wgScriptPath + "/api.php",
  							data: "action=upload&url="+url+"&filename="+filename+"&token="+wtoken+"&comment="+encodeURIComponent("Imported from Facebook. View on Facebook at http://facebook.com/"+id+". Uploaded to Facebook by "+name),
  							success: function(data){
- 								alert(data);
  								window.location.replace(wgServer + wgScriptPath + "/index.php/File:" + filename);
+ 							},
+ 							error: function (xhr, ajaxOptions, thrownError) {
+ 								alert("Something went wrong. Was that a valid Facebook ID or URL?");
  							}
  						});
  					}

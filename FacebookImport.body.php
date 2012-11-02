@@ -33,8 +33,7 @@ class FacebookImport extends SpecialPage {
 		# Intialize the output page.
 		$this->setHeaders();
 		$wgOut->addHTML( "<div id='fb-import'></div>" );
-		$wgOut->addHTML( "<form id='import-form'><div><label for='fbid'>Facebook Photo URL</label><input type='text' id='fbid' name='fbid' /><input type='submit' /></div></form>" );
-	}
+		$wgOut->addHTML( "<form id='import-form'><div><label for='fbid'>Facebook Photo URL</label><input type='text' id='fburl' name='fburl' /><input id='fbid' name='fbid' type='hidden' /><input id='submitted' name='submitted' type='hidden' value='1' /><input type='submit' /></div></form>" );
 }
 
 ?>
