@@ -1,7 +1,7 @@
 # Facebook Import extension for MediaWiki
 
 A MediaWiki extension to facilitate the transfer of information and resources from Facebook into a wiki. It does this in two ways.
-- When users log in using Facebook (via the [Facebook Open Graph Extension](http://www.mediawiki.org/wiki/Extension:Facebook), they are presented with a form populated with information from their Facebook profile, submission of which populates their User Page with that information.
+- When users log in using Facebook (via the [Facebook Open Graph Extension](http://www.mediawiki.org/wiki/Extension:Facebook)) they are presented with a form populated with information from their Facebook profile, submission of which populates their User Page with that information.
 - A Special Page is created to which can be submitted the URL of a photograph on Facebook. Upon submission, the photo is imported into the wiki.
 
 ## Dependencies
