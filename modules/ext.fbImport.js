@@ -47,12 +47,14 @@ function getURLParameter(url, name){return decodeURIComponent((new RegExp('[?|&]
 function makeFacebookRequest(id, accessToken) {
 	FB.api(id+'?access_token='+accessToken, function(response) {
 		if (response) {
+			alert(response.source);
 			uploadFileFromURL(id, response.from.name, response.images[0].source);
 		}
 	});
 }
 
 function uploadFileFromURL(id, name, url) {
+	alert(url);
 	filename = encodeURIComponent(url.substring(url.lastIndexOf('/')+1));
 	enc_url = encodeURIComponent(url);
  	$.ajax({
@@ -71,6 +73,7 @@ function uploadFileFromURL(id, name, url) {
  							url: wgServer + wgScriptPath + "/api.php",
  							data: "action=upload&url="+url+"&filename="+filename+"&token="+wtoken+"&comment="+encodeURIComponent("Imported from Facebook. View on Facebook at http://facebook.com/"+id+". Uploaded to Facebook by "+name),
  							success: function(data){
+ 								alert(data);
  								window.location.replace(wgServer + wgScriptPath + "/index.php/File:" + filename);
  							}
  						});
