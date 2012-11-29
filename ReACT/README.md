@@ -31,16 +31,18 @@ For reference:
 
 ## Use
 
-The file list above should include the spreadsheet itself, `ReACT.xls`, and the quick-start notes, `QuickStart notes.doc`.
+The file list above should include the spreadsheet itself, `ReACT.xls`, and the quick-start notes, `QuickStartNotes.doc`.
 
 To begin using ReACT: simply download these files, open the spreadsheet, and follow the notes.
 
 * [Download `ReACT.xls`](https://raw.github.com/openplanets/SPRUCE/master/ReACT/ReACT.xls)
-* [Download `QuickStart Notes.doc`](https://raw.github.com/openplanets/SPRUCE/master/ReACT/Quickstart notes.doc)
+* [Download `QuickStartNotes.doc`](https://raw.github.com/openplanets/SPRUCE/master/ReACT/QuickStartNotes.doc)
 
 ## Screenshots
 
+### Configuration dialog
 !["Configuration dialog"](https://raw.github.com/openplanets/SPRUCE/master/ReACT/screenshots/screenshot-dialog.png "Configuration dialog")
+### Sample comparison output
 !["Comparison output"](https://raw.github.com/openplanets/SPRUCE/master/ReACT/screenshots/screenshot-comparison.png "Comparison output")
 
 ## Acknowledgements
