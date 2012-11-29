@@ -16,7 +16,9 @@ initial work to address some specific challenges identified at the
 Glasgow Mashup, resulting in a more widely useful preservation tool.
 
 Lead: Ray Moore, ADS
+
 Developer: Andrew Amato, LSE
+
 Previous collection representative: Jenny Mitcham, ADS
 
 ## SPRUCE background
@@ -33,12 +35,13 @@ The file list above should include the spreadsheet itself, `ReACT.xls`, and the 
 
 To begin using ReACT: simply download these files, open the spreadsheet, and follow the notes.
 
+* [Download `ReACT.xls`](https://raw.github.com/openplanets/SPRUCE/master/ReACT/ReACT.xls)
+* [Download `QuickStart Notes.doc`](https://raw.github.com/openplanets/SPRUCE/master/ReACT/Quickstart notes.doc)
+
 ## Screenshots
 
-!["Configuration dialog"](/screenshots/screenshot-dialog.png "Configuration dialog")
-!["Comparison output"](/screenshots/screenshot-comaprison.png "Comparison output")
-
-http://raw.github.com/{USERNAME}/{REPOSITORY}/{BRANCH}/{PATH}
+!["Configuration dialog"](https://raw.github.com/openplanets/SPRUCE/master/ReACT/screenshots/screenshot-dialog.png "Configuration dialog")
+!["Comparison output"](https://raw.github.com/openplanets/SPRUCE/master/ReACT/screenshots/screenshot-comparison.png "Comparison output")
 
 ## Acknowledgements
 This ReACT tool has been developed by Andrew Amato (London School of Economics and Political Science) in conjunction with Ray Moore (Archaeology Data Service). The tool was developed at the SPRUCE (Sustainable PReservation Using Community Engagement) mash-up in Glasgow (16th-18 April 2012) and subsequently by funding from SPRUCE. 
